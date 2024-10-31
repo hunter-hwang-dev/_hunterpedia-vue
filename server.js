@@ -1,7 +1,19 @@
 require("dotenv").config();
 
 const { MongoClient, ServerApiVersion } = require("mongodb");
-const uri = process.env.DB_MONGO_URI;
+const uri = process.env.DB_URL;
+
+const express = require("express");
+const app = express();
+
+app.listen(process.env.PORT, () => {
+  console.log("http://localhost:" + process.env.PORT);
+});
+
+app.get("/", (req, res) => {
+  res.send("hello world!");
+  //console.log(process.env.DB_URL);
+});
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 // const client = new MongoClient(uri, {
