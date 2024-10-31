@@ -4,7 +4,7 @@ const fs = require("fs");
 const { MongoClient } = require("mongodb");
 const quickTips = require("../raw-articles/quick-tips"); // quick-tips.js 모듈 가져오기
 
-const uri = process.env.DB_URL;
+const uri = process.env.DB_URI;
 const client = new MongoClient(uri);
 
 async function run() {

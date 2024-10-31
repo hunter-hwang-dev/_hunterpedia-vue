@@ -6,8 +6,8 @@ const app = express(); //express 라이브러리 사용하기
 const { MongoClient, ServerApiVersion } = require("mongodb"); //mongodb를 씁시다.
 
 let db;
-const url = process.env.DB_URL;
-new MongoClient(url)
+const uri = process.env.DB_URI;
+new MongoClient(uri)
   .connect()
   .then((client) => {
     console.log("MongoDB is connected.");
