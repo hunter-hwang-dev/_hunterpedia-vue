@@ -277,3 +277,5 @@ const quickTips = [
     "related-tips": "",
   },
 ];
+
+module.exports = quickTips; // quickTips를 모듈로 내보냄

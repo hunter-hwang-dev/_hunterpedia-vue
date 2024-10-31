@@ -2,6 +2,7 @@ require("dotenv").config(); //환경변수 가져오기
 
 const fs = require("fs");
 const { MongoClient } = require("mongodb");
+const quickTips = require("../raw-articles/quick-tips"); // quick-tips.js 모듈 가져오기
 
 const uri = process.env.DB_URL;
 const client = new MongoClient(uri);
@@ -11,9 +12,6 @@ async function run() {
     await client.connect();
     const database = client.db("db");
     const collection = database.collection("quick-tips");
-
-    const data = fs.readFileSync("../raw-articles/quick-tips.json", "utf8");
-    const quickTips = JSON.parse(data);
 
     // MongoDB에 데이터 삽입
     const result = await collection.insertMany(quickTips);
