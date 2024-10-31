@@ -1,21 +1,34 @@
-require("dotenv").config();
-
-const { MongoClient, ServerApiVersion } = require("mongodb");
-const uri = process.env.DB_URL;
+require("dotenv").config(); //환경변수 가져오기
 
 const express = require("express");
-const app = express();
+const app = express(); //express 라이브러리 사용하기
 
-app.listen(process.env.PORT, () => {
-  console.log("http://localhost:" + process.env.PORT);
+const { MongoClient, ServerApiVersion } = require("mongodb"); //mongodb를 씁시다.
+
+let db;
+const url = process.env.DB_URL;
+new MongoClient(url)
+  .connect()
+  .then((client) => {
+    console.log("MongoDB is connected.");
+    db = client.db("db");
+
+    app.listen(process.env.PORT, () => {
+      console.log("server on http://localhost:" + process.env.PORT);
+    });
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+
+app.get("/", async (req, res) => {
+  let result = await db.collection("quick-tips").find().toArray();
+  res.send(result);
 });
 
-app.get("/", (req, res) => {
-  res.send("hello world!");
-  //console.log(process.env.DB_URL);
-});
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+// 비동기 처리가 잘 되어 있는 MongoDB 샘플 코드. -------------------------------------
+// 기능 구현 후 refactor할 때 참고 할 것! -------------------------------------------
+// // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 // const client = new MongoClient(uri, {
 //   serverApi: {
 //     version: ServerApiVersion.v1,
@@ -23,7 +36,7 @@ app.get("/", (req, res) => {
 //     deprecationErrors: true,
 //   },
 // });
-
+//
 // async function run() {
 //   try {
 //     // Connect the client to the server	(optional starting in v4.7)
