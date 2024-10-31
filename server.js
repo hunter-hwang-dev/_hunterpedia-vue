@@ -22,7 +22,10 @@ new MongoClient(url)
   });
 
 app.get("/", async (req, res) => {
-  let result = await db.collection("quick-tips").find().toArray();
+  let result = await db
+    .collection("quick-tips")
+    .aggregate([{ $sample: { size: 1 } }])
+    .toArray();
   res.send(result);
 });
 
