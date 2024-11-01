@@ -3,6 +3,10 @@ require("dotenv").config(); //환경변수 가져오기
 const express = require("express");
 const app = express(); //express 라이브러리 사용하기
 
+app.set("view engine", "ejs"); //ejs 사용
+app.use(express.json());
+app.use(express.urlencoded({ extended: true })); //json - req.body 바로 출력
+
 const { MongoClient, ServerApiVersion } = require("mongodb"); //mongodb를 씁시다.
 
 let db;
@@ -27,6 +31,26 @@ app.get("/", async (req, res) => {
     .aggregate([{ $sample: { size: 1 } }])
     .toArray();
   res.send(result);
+});
+
+//post 관련 코드: 추후 post.js로 분리 예정 ----------------------------------------
+app.get("/post", (req, res) => {
+  //추후 엔드포인트 "/admin/write/quick-tips"로 변경
+  res.render("post.ejs");
+});
+
+app.post("/post", async (req, res) => {
+  let today = new Date();
+  console.log(today);
+
+  let result = await db.collection("quick-tips").insertOne({
+    question: req.body.question,
+    answer: req.body.answer,
+    hashtags: req.body.hashtags,
+    createdAt: today,
+    revisedAt: today,
+    relatedTips: "",
+  });
 });
 
 // 비동기 처리가 잘 되어 있는 MongoDB 샘플 코드. -------------------------------------
@@ -55,9 +79,3 @@ app.get("/", async (req, res) => {
 //   }
 // }
 // run().catch(console.dir);
-
-//post 관련 코드: 추후 post.js로 분리 예정 ----------------------------------------
-app.get("/post", (req, res) => {
-  //추후 엔드포인트 "/admin/write/quick-tips"로 변경
-  res.render("post.ejs");
-});
