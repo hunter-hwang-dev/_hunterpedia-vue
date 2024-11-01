@@ -55,3 +55,9 @@ app.get("/", async (req, res) => {
 //   }
 // }
 // run().catch(console.dir);
+
+//post 관련 코드: 추후 post.js로 분리 예정 ----------------------------------------
+app.get("/post", (req, res) => {
+  //추후 엔드포인트 "/admin/write/quick-tips"로 변경
+  res.render("post.ejs");
+});
