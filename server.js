@@ -79,3 +79,8 @@ app.post("/post", async (req, res) => {
 //   }
 // }
 // run().catch(console.dir);
+
+//tailwind css 샘플코드 출력 테스트 ----------------------------------------
+app.get("/tailwind", (req, res) => {
+  res.sendFile(__dirname + "/src/index.html");
+});
