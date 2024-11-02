@@ -3,14 +3,15 @@ require("dotenv").config(); //환경변수 가져오기
 const express = require("express");
 const app = express(); //express 라이브러리 가져오기
 
-const argon2 = require("argon2"); //해싱 알고리즘 argon2 라이브러리 가져오기
-const session = require("express-session");
-const passport = require("passport"); //passport 라이브러리 가져오기
-const LocalStrategy = require("passport-local");
-
 app.set("view engine", "ejs"); //뷰 엔진으로 ejs 사용
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); //json - req.body 바로 출력
+
+const argon2 = require("argon2"); //해싱 알고리즘 argon2 라이브러리 가져오기
+
+const session = require("express-session");
+const passport = require("passport"); //passport 라이브러리 가져오기
+const LocalStrategy = require("passport-local");
 
 app.use(passport.initialize());
 app.use(
@@ -18,21 +19,10 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    cookie: { maxAge: 60 * 60 * 1000 }, // 1시간
   })
 );
 app.use(passport.session()); //passport 사용. 순서 주의!
-
-passport.serializeUser((user, done) => {
-  done(null, user.id); // user.id를 세션에 저장
-});
-
-passport.deserializeUser((id, done) => {
-  // 세션에 저장된 id를 사용하여 사용자 정보를 가져옴
-  db.collection("admin")
-    .findOne({ _id: new ObjectId(id) }) // type 주의
-    .then((user) => done(null, user))
-    .catch((err) => done(err, null));
-});
 
 const { MongoClient, ServerApiVersion } = require("mongodb"); //mongodb 사용
 
@@ -51,6 +41,52 @@ new MongoClient(uri)
   .catch((err) => {
     console.log(err);
   }); //mongodb 연결
+
+passport.use(
+  //passport.authenticate('local') 으로 불러오기 가능.
+  new LocalStrategy(async (usernameInput, passwordInput, cb) => {
+    let result = await db
+      .collection("admin")
+      .findOne({ username: usernameInput });
+    if (!result) {
+      return cb(null, false, { message: "invalid username" });
+    }
+    if (await argon2.verify(result.password, passwordInput)) {
+      return cb(null, result);
+    } else {
+      return cb(null, false, { message: "invalid password" });
+    }
+  })
+); //passport LocalStrategy 설정 - username 및 password DB 일치하는지 검증하는 로직.
+
+passport.serializeUser((user, done) => {
+  process.nextTick(() => {
+    // 비동기
+    done(null, { id: user._id, username: user.username });
+  });
+}); // cookie 저장하기
+passport.deserializeUser((user, done) => {
+  process.nextTick(() => {
+    return done(null, user);
+  });
+}); // cookie 열기 - req.user 로 불러올 수 있음.
+
+//--------------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------------
+
+app.post("/admin/login", async (req, res, next) => {
+  passport.authenticate("local", (error, user, info) => {
+    if (error) return res.status(500).json(error);
+    if (!user) return res.status(401).json(info.message);
+    req.logIn(user, (err) => {
+      if (err) return next(err);
+      res.redirect("/");
+    });
+  })(req, res, next);
+}); // passport 검증
+
+//--------------------------------------------------------------------------------------------------------------------------
 
 app.get("/", (req, res) => {
   const isSessionValid = req.isAuthenticated();
@@ -88,6 +124,23 @@ app.post("/post", async (req, res) => {
   });
 });
 
+//admin 관련 코드: 추후 admin.js로 분리 예정 ----------------------------------------
+app.get("/admin", (req, res) => {
+  //추후 엔드포인트 '/admin/write/quick-tips'로 변경
+  res.render("admin.ejs");
+});
+
+app.post("/admin/password", async (req, res) => {
+  const hash = await argon2.hash(req.body.password); //form에 입력한 password를 hashing
+  let result = await db.collection("admin").updateOne(
+    { username: process.env.ADMIN_USERNAME },
+    {
+      $set: { password: hash },
+    }
+  );
+  res.redirect("/admin");
+});
+
 // 비동기 처리가 잘 되어 있는 MongoDB 샘플 코드. -------------------------------------
 // 기능 구현 후 refactor할 때 참고 할 것! -------------------------------------------
 // // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -114,54 +167,3 @@ app.post("/post", async (req, res) => {
 //   }
 // }
 // run().catch(console.dir);
-
-//admin 관련 코드: 추후 admin.js로 분리 예정 ----------------------------------------
-app.get("/admin", (req, res) => {
-  //추후 엔드포인트 '/admin/write/quick-tips'로 변경
-  res.render("admin.ejs");
-});
-
-app.post("/admin/password", async (req, res) => {
-  const hash = await argon2.hash(req.body.password); //form에 입력한 password를 hashing
-  let result = await db.collection("admin").updateOne(
-    { username: process.env.ADMIN_USERNAME },
-    {
-      $set: { password: hash },
-    }
-  );
-  res.redirect("/admin");
-});
-
-passport.use(
-  new LocalStrategy(async (username, password, cb) => {
-    let result = await db.collection("admin").findOne({ username: username });
-    if (!result) {
-      return cb(null, false, { message: "invalid username" });
-    }
-    if (result.password == 입력한비번) {
-      return cb(null, result);
-    } else {
-      return cb(null, false, { message: "invalid password" });
-    }
-  })
-); //
-
-app.post("/admin/login", async (req, res, next) => {
-  const user = await db
-    .collection("admin")
-    .findOne({ username: req.body.username });
-
-  if (user && (await argon2.verify(user.password, req.body.password))) {
-    //db 호출 정상 처리 && 비밀번호 맞으면
-    req.login(user, { session: false }, (err) => {
-      if (err) {
-        return next(err); // 미들웨어 제끼고 에러 반환
-      }
-      return res.redirect("/"); //로그인 성공
-    });
-  } else {
-    res
-      .status(401)
-      .send("로그인 실패: 사용자 이름 또는 비밀번호가 올바르지 않습니다.");
-  }
-});
