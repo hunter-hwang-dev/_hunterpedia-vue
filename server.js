@@ -3,6 +3,7 @@ require("dotenv").config(); //환경변수 가져오기
 const express = require("express");
 const app = express(); //express 라이브러리 가져오기
 
+const argon2 = require("argon2"); //해싱 알고리즘 argon2 라이브러리 가져오기
 const session = require("express-session");
 const passport = require("passport");
 const LocalStrategy = require("passport-local"); //passport 라이브러리 가져오기
@@ -101,16 +102,12 @@ app.get("/admin", (req, res) => {
 });
 
 app.post("/admin/password", async (req, res) => {
-  console.log(req.body.password);
-
-  console.log(await db.collection("admin").findOne());
-
+  const hash = await argon2.hash(req.body.password); //form에 입력한 password를 hashing
   let result = await db.collection("admin").updateOne(
     { username: process.env.ADMIN_USERNAME },
     {
-      $set: { password: req.body.password },
+      $set: { password: hash },
     }
   );
-
-  console.log(await db.collection("admin").findOne());
+  res.redirect("/admin");
 });
