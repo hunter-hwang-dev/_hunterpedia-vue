@@ -1,13 +1,27 @@
 require("dotenv").config(); //환경변수 가져오기
 
 const express = require("express");
-const app = express(); //express 라이브러리 사용하기
+const app = express(); //express 라이브러리 가져오기
 
-app.set("view engine", "ejs"); //ejs 사용
+const session = require("express-session");
+const passport = require("passport");
+const LocalStrategy = require("passport-local"); //passport 라이브러리 가져오기
+
+app.set("view engine", "ejs"); //뷰 엔진으로 ejs 사용
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); //json - req.body 바로 출력
 
-const { MongoClient, ServerApiVersion } = require("mongodb"); //mongodb를 씁시다.
+app.use(passport.initialize());
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(passport.session()); //passport 사용
+
+const { MongoClient, ServerApiVersion } = require("mongodb"); //mongodb 사용
 
 let db;
 const uri = process.env.DB_URI;
@@ -23,7 +37,7 @@ new MongoClient(uri)
   })
   .catch((err) => {
     console.log(err);
-  });
+  }); //mongodb 연결
 
 app.get("/", async (req, res) => {
   let result = await db
@@ -86,6 +100,7 @@ app.get("/admin", (req, res) => {
   res.render("admin.ejs");
 });
 
-app.post("/admin/login", async (req, res) => {
-  console.log(req.body);
+app.post("/admin/password", async (req, res) => {
+  console.log(req.body.password);
+  console.log(await db.collection("admin").findOne());
 });
