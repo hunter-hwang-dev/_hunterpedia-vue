@@ -62,7 +62,7 @@ app.get("/", (req, res) => {
 app.get("/quick-tips", (req, res) => {
   // 나중에 메인 페이지에서 동적으로 관리할 예정
   // let result = await db
-  //   .collection("quick-tips")
+  //   .collection('quick-tips')
   //   .aggregate([{ $sample: { size: 1 } }])
   //   .toArray();
   res.render("quickTips.ejs");
@@ -70,7 +70,7 @@ app.get("/quick-tips", (req, res) => {
 
 //post 관련 코드: 추후 post.js로 분리 예정 ----------------------------------------
 app.get("/post", (req, res) => {
-  //추후 엔드포인트 "/admin/write/quick-tips"로 변경
+  //추후 엔드포인트 '/admin/write/quick-tips'로 변경
   res.render("post.ejs");
 });
 
@@ -104,9 +104,9 @@ app.post("/post", async (req, res) => {
 //     // Connect the client to the server	(optional starting in v4.7)
 //     await client.connect();
 //     // Send a ping to confirm a successful connection
-//     await client.db("admin").command({ ping: 1 });
+//     await client.db('admin').command({ ping: 1 });
 //     console.log(
-//       "Pinged your deployment. You successfully connected to MongoDB!"
+//       'Pinged your deployment. You successfully connected to MongoDB!'
 //     );
 //   } finally {
 //     // Ensures that the client will close when you finish/error
@@ -117,7 +117,7 @@ app.post("/post", async (req, res) => {
 
 //admin 관련 코드: 추후 admin.js로 분리 예정 ----------------------------------------
 app.get("/admin", (req, res) => {
-  //추후 엔드포인트 "/admin/write/quick-tips"로 변경
+  //추후 엔드포인트 '/admin/write/quick-tips'로 변경
   res.render("admin.ejs");
 });
 
