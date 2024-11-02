@@ -6,10 +6,13 @@
     <title>admin</title>
   </head>
   <body>
+    <button onclick="window.location.href='/admin'">admin 페이지로 이동</button>
     <% if (isSessionValid) { %>
     <p>admin으로 접속함</p>
     <% } else { %>
     <p>글 작성 위해선 로그인 필요</p>
     <% } %>
+
+    <button>quick-tips 랜덤조회 페이지로 (현재 비활성화됨)</button>
   </body>
 </html>

@@ -29,7 +29,7 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser((id, done) => {
   // 세션에 저장된 id를 사용하여 사용자 정보를 가져옴
   db.collection("admin")
-    .findOne({ _id: id })
+    .findOne({ _id: new ObjectId(id) }) // type 주의
     .then((user) => done(null, user))
     .catch((err) => done(err, null));
 });
@@ -59,13 +59,13 @@ app.get("/", (req, res) => {
   });
 });
 
-app.get("/quick-tips", async (req, res) => {
+app.get("/quick-tips", (req, res) => {
   // 나중에 메인 페이지에서 동적으로 관리할 예정
-  let result = await db
-    .collection("quick-tips")
-    .aggregate([{ $sample: { size: 1 } }])
-    .toArray();
-  res.send(result);
+  // let result = await db
+  //   .collection("quick-tips")
+  //   .aggregate([{ $sample: { size: 1 } }])
+  //   .toArray();
+  res.render("quickTips.ejs");
 });
 
 //post 관련 코드: 추후 post.js로 분리 예정 ----------------------------------------
@@ -143,7 +143,7 @@ app.post("/admin/login", async (req, res, next) => {
       if (err) {
         return next(err); // 미들웨어 제끼고 에러 반환
       }
-      return res.redirect("/admin"); //로그인 성공
+      return res.redirect("/"); //로그인 성공
     });
   } else {
     res
