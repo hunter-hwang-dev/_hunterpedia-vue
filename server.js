@@ -139,7 +139,7 @@ app.post("/admin/login", async (req, res, next) => {
 
   if (user && (await argon2.verify(user.password, req.body.password))) {
     //db 호출 정상 처리 && 비밀번호 맞으면
-    req.login(user, (err) => {
+    req.login(user, { session: false }, (err) => {
       if (err) {
         return next(err); // 미들웨어 제끼고 에러 반환
       }
