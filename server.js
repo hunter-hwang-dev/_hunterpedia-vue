@@ -1,27 +1,26 @@
 require("dotenv").config(); //환경변수 가져오기
 
 const express = require("express");
-const cookieParser = require("cookie-parser");
 const app = express(); //express 라이브러리 가져오기
 
 const argon2 = require("argon2"); //해싱 알고리즘 argon2 라이브러리 가져오기
 const session = require("express-session");
 const passport = require("passport"); //passport 라이브러리 가져오기
+const LocalStrategy = require("passport-local");
 
 app.set("view engine", "ejs"); //뷰 엔진으로 ejs 사용
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); //json - req.body 바로 출력
 
+app.use(passport.initialize());
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 },
   })
 );
-app.use(passport.initialize());
-app.use(passport.session()); //passport 사용
+app.use(passport.session()); //passport 사용. 순서 주의!
 
 passport.serializeUser((user, done) => {
   done(null, user.id); // user.id를 세션에 저장
@@ -132,6 +131,20 @@ app.post("/admin/password", async (req, res) => {
   );
   res.redirect("/admin");
 });
+
+passport.use(
+  new LocalStrategy(async (username, password, cb) => {
+    let result = await db.collection("admin").findOne({ username: username });
+    if (!result) {
+      return cb(null, false, { message: "invalid username" });
+    }
+    if (result.password == 입력한비번) {
+      return cb(null, result);
+    } else {
+      return cb(null, false, { message: "invalid password" });
+    }
+  })
+); //
 
 app.post("/admin/login", async (req, res, next) => {
   const user = await db
