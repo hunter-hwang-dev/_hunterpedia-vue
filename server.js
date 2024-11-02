@@ -53,7 +53,10 @@ new MongoClient(uri)
   }); //mongodb 연결
 
 app.get("/", (req, res) => {
-  res.render("admin.ejs");
+  const isSessionValid = req.isAuthenticated();
+  res.render("index.ejs", {
+    isSessionValid: isSessionValid,
+  });
 });
 
 app.get("/quick-tips", async (req, res) => {
