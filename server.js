@@ -5,22 +5,34 @@ const app = express(); //express 라이브러리 가져오기
 
 const argon2 = require("argon2"); //해싱 알고리즘 argon2 라이브러리 가져오기
 const session = require("express-session");
-const passport = require("passport");
-const LocalStrategy = require("passport-local"); //passport 라이브러리 가져오기
+const passport = require("passport"); //passport 라이브러리 가져오기
 
 app.set("view engine", "ejs"); //뷰 엔진으로 ejs 사용
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); //json - req.body 바로 출력
 
-app.use(passport.initialize());
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    cookie: { maxAge: 24 * 60 * 60 * 1000 },
   })
 );
+app.use(passport.initialize());
 app.use(passport.session()); //passport 사용
+
+passport.serializeUser((user, done) => {
+  done(null, user.id); // user.id를 세션에 저장
+});
+
+passport.deserializeUser((id, done) => {
+  // 세션에 저장된 id를 사용하여 사용자 정보를 가져옴
+  db.collection("admin")
+    .findOne({ _id: id })
+    .then((user) => done(null, user))
+    .catch((err) => done(err, null));
+});
 
 const { MongoClient, ServerApiVersion } = require("mongodb"); //mongodb 사용
 
@@ -40,7 +52,12 @@ new MongoClient(uri)
     console.log(err);
   }); //mongodb 연결
 
-app.get("/", async (req, res) => {
+app.get("/", (req, res) => {
+  res.render("admin.ejs");
+});
+
+app.get("/quick-tips", async (req, res) => {
+  // 나중에 메인 페이지에서 동적으로 관리할 예정
   let result = await db
     .collection("quick-tips")
     .aggregate([{ $sample: { size: 1 } }])
@@ -112,28 +129,22 @@ app.post("/admin/password", async (req, res) => {
   res.redirect("/admin");
 });
 
-app.post("/admin/login", async (req, res) => {
-  let result = await db
+app.post("/admin/login", async (req, res, next) => {
+  const user = await db
     .collection("admin")
-    .findOne({ username: req.body.username }); //db에서 hashing 처리된 비밀번호 가져오기
+    .findOne({ username: req.body.username });
 
-  if (result) {
-    //db 호출 정상 처리되면
-    const isPasswordValid = await argon2.verify(
-      result.password,
-      req.body.password
-    );
-
-    if (isPasswordValid) {
-      console.log("valid password");
-    } else {
-      console.log("invalid password");
-      res.status(401).send("invalid password");
-    }
+  if (user && (await argon2.verify(user.password, req.body.password))) {
+    //db 호출 정상 처리 && 비밀번호 맞으면
+    req.login(user, (err) => {
+      if (err) {
+        return next(err); // 미들웨어 제끼고 에러 반환
+      }
+      return res.redirect("/admin"); //로그인 성공
+    });
   } else {
-    console.log("username not found");
-    res.status(404).send("username not found");
+    res
+      .status(401)
+      .send("로그인 실패: 사용자 이름 또는 비밀번호가 올바르지 않습니다.");
   }
-
-  res.redirect("/admin");
 });
