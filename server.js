@@ -111,3 +111,29 @@ app.post("/admin/password", async (req, res) => {
   );
   res.redirect("/admin");
 });
+
+app.post("/admin/login", async (req, res) => {
+  let result = await db
+    .collection("admin")
+    .findOne({ username: req.body.username }); //db에서 hashing 처리된 비밀번호 가져오기
+
+  if (result) {
+    //db 호출 정상 처리되면
+    const isPasswordValid = await argon2.verify(
+      result.password,
+      req.body.password
+    );
+
+    if (isPasswordValid) {
+      console.log("valid password");
+    } else {
+      console.log("invalid password");
+      res.status(401).send("invalid password");
+    }
+  } else {
+    console.log("username not found");
+    res.status(404).send("username not found");
+  }
+
+  res.redirect("/admin");
+});
