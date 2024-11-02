@@ -6,6 +6,11 @@
     <title>admin</title>
   </head>
   <body>
+    <form class="form-box" action="/admin/password" method="POST">
+      <input name="password" type="password" placeholder="비밀번호" />
+      <button type="submit">비밀번호 변경</button>
+    </form>
+
     <form class="form-box" action="/admin/login" method="POST">
       <input name="username" type="email" placeholder="계정" />
       <input name="password" type="password" placeholder="비밀번호" />
