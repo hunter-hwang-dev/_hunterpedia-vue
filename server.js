@@ -1,6 +1,7 @@
 require("dotenv").config(); //환경변수 가져오기
 
 const express = require("express");
+const cookieParser = require("cookie-parser");
 const app = express(); //express 라이브러리 가져오기
 
 const argon2 = require("argon2"); //해싱 알고리즘 argon2 라이브러리 가져오기
