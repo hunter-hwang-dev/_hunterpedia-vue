@@ -89,9 +89,8 @@ app.post("/admin/login", async (req, res, next) => {
 //--------------------------------------------------------------------------------------------------------------------------
 
 app.get("/", (req, res) => {
-  const isSessionValid = req.isAuthenticated();
   res.render("index.ejs", {
-    isSessionValid: isSessionValid,
+    isSessionValid: req.isAuthenticated(),
   });
 });
 
