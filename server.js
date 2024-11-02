@@ -102,5 +102,15 @@ app.get("/admin", (req, res) => {
 
 app.post("/admin/password", async (req, res) => {
   console.log(req.body.password);
+
+  console.log(await db.collection("admin").findOne());
+
+  let result = await db.collection("admin").updateOne(
+    { username: process.env.ADMIN_USERNAME },
+    {
+      $set: { password: req.body.password },
+    }
+  );
+
   console.log(await db.collection("admin").findOne());
 });
