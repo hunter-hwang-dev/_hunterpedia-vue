@@ -1,4 +1,13 @@
-<script setup>
+<script>
+</script>
+
+
+<template></template>
+
+<style>
+</style>
+
+<!-- <script setup>
 import HelloWorld from './components/HelloWorld.vue'
 import TheWelcome from './components/TheWelcome.vue'
 </script>
@@ -44,4 +53,4 @@ header {
     flex-wrap: wrap;
   }
 }
-</style>
+</style> -->
